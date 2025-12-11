@@ -25,6 +25,6 @@ spec:
   
   # Optional: CPU-based scaling
   - type: cpu
+    metricType: Utilization
     metadata:
-      metricType: Utilization
       value: '70'  # Scale up when CPU > 70%
