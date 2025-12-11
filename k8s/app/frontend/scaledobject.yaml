@@ -23,8 +23,9 @@ spec:
         sum(rate(http_requests_total{service="frontend-app"}[1m])) / 
         count(count by (pod) (http_requests_total{service="frontend-app"}))
   
-  # Optional: CPU-based scaling
+  # CPU-based scaling
   - type: cpu
     metricType: Utilization
     metadata:
-      value: '70'  # Scale up when CPU > 70%
+      value: "70"
+
