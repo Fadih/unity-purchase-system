@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-app
+  namespace: app
+  labels:
+    app: backend-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: backend-app
+  template:
+    metadata:
+      labels:
+        app: backend-app
+    spec:
+      containers:
+      - name: api-server
+        image: backend-app:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: http
+          containerPort: 8000
+          protocol: TCP
+        
+        # Environment variables from ConfigMap and Secret
+        env:
+        - name: MONGODB_URI
+          valueFrom:
+            secretKeyRef:
+              name: backend-app-secrets
+              key: MONGODB_URI
+        - name: KAFKA_BOOTSTRAP_SERVERS
+          valueFrom:
+            secretKeyRef:
+              name: backend-app-secrets
+              key: KAFKA_BOOTSTRAP_SERVERS
+        - name: KAFKA_TOPIC
+          valueFrom:
+            configMapKeyRef:
+              name: backend-app-config
+              key: KAFKA_TOPIC
+        - name: KAFKA_GROUP_ID
+          valueFrom:
+            configMapKeyRef:
+              name: backend-app-config
+              key: KAFKA_GROUP_ID
+        - name: PORT
+          valueFrom:
+            configMapKeyRef:
+              name: backend-app-config
+              key: PORT
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: backend-app-config
+              key: LOG_LEVEL
+        
+        # Health checks
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        
+        # Resource limits
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi

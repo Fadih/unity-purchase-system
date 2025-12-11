@@ -1,0 +1,23 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: app
+
+resources:
+  - configmap.yaml
+  - secret.yaml
+  - deployment.yaml
+  - service.yaml
+  - scaledobject.yaml
+
+# Common labels
+labels:
+  - includeSelectors: true
+    pairs:
+      app: backend-app
+
+# Image configuration (can be overridden)
+images:
+  - name: backend-app
+    newName: fadihussien/unity
+    newTag: backend-v1.0.0

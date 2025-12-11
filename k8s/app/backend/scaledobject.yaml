@@ -1,0 +1,26 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: backend-app-scaledobject
+  namespace: app
+  labels:
+    app: backend-app
+spec:
+  scaleTargetRef:
+    name: backend-app
+  minReplicaCount: 2
+  maxReplicaCount: 10
+  cooldownPeriod: 30  # seconds to wait before scaling down
+  pollingInterval: 30  # seconds between metric evaluations
+  triggers:
+  # Kafka scaler for consumer lag
+  - type: kafka
+    metadata:
+      bootstrapServers: kafka.kafka.svc.cluster.local:9092
+      consumerGroup: customer-management-api
+      topic: purchase-events
+      lagThreshold: '10'  # Scale up when lag > 10 messages per pod
+      activationLagThreshold: '5'  # Minimum lag to start scaling
+      offsetResetPolicy: earliest
+      allowIdleConsumers: 'false'
+      scaleToZeroOnInvalidOffset: 'false'

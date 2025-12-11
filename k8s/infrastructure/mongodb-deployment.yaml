@@ -1,0 +1,83 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: mongo
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mongo-root-credentials
+  namespace: mongo
+type: Opaque
+data:
+  # echo -n 'root' | base64
+  MONGO_INITDB_ROOT_USERNAME: cm9vdA==
+  # echo -n 'changeme' | base64
+  MONGO_INITDB_ROOT_PASSWORD: Y2hhbmdlbWU=
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo
+  namespace: mongo
+  labels:
+    app: mongo
+spec:
+  type: ClusterIP
+  ports:
+    - port: 27017
+      targetPort: 27017
+      name: mongo
+  selector:
+    app: mongo
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mongo
+  namespace: mongo
+  labels:
+    app: mongo
+spec:
+  serviceName: mongo
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongo
+  template:
+    metadata:
+      labels:
+        app: mongo
+    spec:
+      containers:
+        - name: mongo
+          image: mongo:7.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 27017
+              name: mongo
+          env:
+            - name: MONGO_INITDB_ROOT_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-root-credentials
+                  key: MONGO_INITDB_ROOT_USERNAME
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-root-credentials
+                  key: MONGO_INITDB_ROOT_PASSWORD
+          volumeMounts:
+            - name: data
+              mountPath: /data/db
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        # Change this if you use Longhorn / EBS / etc.
+        storageClassName: local-path
+        resources:
+          requests:
+            storage: 3Gi

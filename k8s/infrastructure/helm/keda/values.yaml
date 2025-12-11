@@ -1,0 +1,90 @@
+# KEDA Helm Chart Default Values
+# This file contains default configuration for KEDA installation
+
+operator:
+  name: keda-operator
+  replicaCount: 1
+  
+  image:
+    keda:
+      repository: ghcr.io/kedacore/keda
+      tag: "2.18.0"
+    metricsApiServer:
+      repository: ghcr.io/kedacore/keda-metrics-apiserver
+      tag: "2.18.0"
+
+metricsServer:
+  enabled: true
+  replicaCount: 1
+
+serviceAccount:
+  create: true
+  name: ""
+
+podSecurityPolicy:
+  enabled: false
+
+rbac:
+  create: true
+
+crds:
+  install: true
+
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1001
+  fsGroup: 1001
+
+resources:
+  operator:
+    requests:
+      cpu: 100m
+      memory: 100Mi
+    limits:
+      cpu: 1000m
+      memory: 1000Mi
+  metricsServer:
+    requests:
+      cpu: 100m
+      memory: 100Mi
+    limits:
+      cpu: 1000m
+      memory: 1000Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+logging:
+  operator:
+    level: info
+    format: json
+  metricServer:
+    level: 0
+
+health:
+  operator:
+    enabled: true
+  metricsServer:
+    enabled: true
+
+watchNamespace: ""
+
+permissions:
+  resourceReader:
+    enabled: true
+
+serviceMonitor:
+  enabled: false
+
+prometheus:
+  metricServer:
+    enabled: false
+    port: 9020
+    path: /metrics
+  operator:
+    enabled: false
+    port: 8080
+    path: /metrics

@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-app-config
+  namespace: app
+  labels:
+    app: frontend-app
+data:
+  # Kafka configuration
+  KAFKA_TOPIC: "purchase-events"
+  
+  # Customer Management API URL (backend service)
+  CUSTOMER_API_URL: "http://backend-app:8000"
+  
+  # Server configuration
+  PORT: "8001"
+  LOG_LEVEL: "INFO"

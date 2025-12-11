@@ -1,0 +1,28 @@
+# FastAPI and server
+fastapi==0.115.0
+uvicorn[standard]==0.32.0
+pydantic>=2.9.0
+pydantic-settings>=2.6.0
+
+# Templates
+jinja2==3.1.2
+python-multipart==0.0.6
+
+# HTTP client (for calling Customer Management API)
+httpx==0.25.2
+
+# Kafka producer
+# Using confluent-kafka for better Python 3.13 compatibility
+# Note: On macOS, you may need: brew install librdkafka
+confluent-kafka==2.5.0
+
+# Environment variables
+python-dotenv==1.0.0
+
+# Logging
+python-json-logger==2.0.7
+
+# Testing (optional)
+pytest==7.4.3
+pytest-asyncio==0.21.1
+

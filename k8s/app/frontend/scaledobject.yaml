@@ -1,0 +1,30 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: frontend-app-scaledobject
+  namespace: app
+  labels:
+    app: frontend-app
+spec:
+  scaleTargetRef:
+    name: frontend-app
+  minReplicaCount: 2
+  maxReplicaCount: 10
+  cooldownPeriod: 30  # seconds to wait before scaling down
+  pollingInterval: 30  # seconds between metric evaluations
+  triggers:
+  # Prometheus scaler for HTTP request rate
+  - type: prometheus
+    metadata:
+      serverAddress: http://prometheus-service:9090  # Adjust to your Prometheus service
+      metricName: http_requests_per_second
+      threshold: '100'  # Scale up when requests/second > 100 per pod
+      query: |
+        sum(rate(http_requests_total{service="frontend-app"}[1m])) / 
+        count(count by (pod) (http_requests_total{service="frontend-app"}))
+  
+  # Optional: CPU-based scaling
+  - type: cpu
+    metadata:
+      type: Utilization
+      value: '70'  # Scale up when CPU > 70%

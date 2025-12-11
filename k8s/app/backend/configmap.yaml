@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-app-config
+  namespace: app
+  labels:
+    app: backend-app
+data:
+  # Kafka configuration
+  KAFKA_TOPIC: "purchase-events"
+  KAFKA_GROUP_ID: "customer-management-api"
+  
+  # Server configuration
+  PORT: "8000"
+  LOG_LEVEL: "INFO"
