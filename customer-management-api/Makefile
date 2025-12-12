@@ -86,7 +86,7 @@ docker-push: ## Push Docker image to Docker Hub (assumes image already built)
 	@docker push $(FULL_IMAGE_NAME)
 	@echo "$(GREEN)✅ Image pushed successfully to $(FULL_IMAGE_NAME)$(NC)"
 
-docker-release: test build docker-push ## Run tests, build and push Docker image to Docker Hub
+docker-release: build docker-push ## Build and push Docker image to Docker Hub
 	@echo "$(GREEN)✅ Release completed: $(FULL_IMAGE_NAME)$(NC)"
 
 lint: ## Run linter (if available)

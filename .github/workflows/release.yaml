@@ -40,6 +40,25 @@ jobs:
           echo "Release tag: $TAG_NAME"
           echo "Extracted version: $VERSION"
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run Frontend Tests
+        working-directory: ./customer-web-server
+        run: |
+          echo "🧪 Running frontend tests..."
+          make test
+          echo "✅ Frontend tests passed"
+
+      - name: Run Backend Tests
+        working-directory: ./customer-management-api
+        run: |
+          echo "🧪 Running backend tests..."
+          make test
+          echo "✅ Backend tests passed"
+
       - name: Release Frontend
         working-directory: ./customer-web-server
         run: |
