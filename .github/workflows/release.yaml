@@ -33,10 +33,11 @@ jobs:
       - name: Extract version from release tag
         id: extract_version
         run: |
-          # Remove 'v' prefix if present (e.g., v1.0.5 -> 1.0.5)
-          VERSION=${GITHUB_REF#refs/tags/v}
-          VERSION=${VERSION#refs/tags/}
+          # Get tag from release event and remove 'v' prefix if present (e.g., v1.0.5 -> 1.0.5)
+          TAG_NAME="${{ github.event.release.tag_name }}"
+          VERSION=${TAG_NAME#v}
           echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Release tag: $TAG_NAME"
           echo "Extracted version: $VERSION"
 
       - name: Release Frontend
