@@ -22,7 +22,7 @@ install-deps: ## Install Python dependencies
 	@if [ ! -d "venv" ]; then \
 		python3 -m venv venv; \
 	fi
-	@source venv/bin/activate && \
+	@. venv/bin/activate && \
 		pip install --upgrade pip setuptools wheel && \
 		pip install -r requirements.txt
 	@echo "$(GREEN)✅ Dependencies installed$(NC)"
@@ -40,7 +40,7 @@ test-local: ## Run tests locally
 		echo "$(YELLOW)Creating virtual environment...$(NC)"; \
 		python3 -m venv venv; \
 	fi
-	@source venv/bin/activate && \
+	@. venv/bin/activate && \
 		pip install --quiet --upgrade pip setuptools wheel && \
 		pip install --quiet -r requirements.txt && \
 		python -m pytest tests/ -v --tb=short || (echo "$(RED)❌ Tests failed$(NC)" && exit 1)
@@ -64,7 +64,7 @@ run: ## Run the application locally
 		echo "$(YELLOW)Creating virtual environment...$(NC)"; \
 		python3 -m venv venv; \
 	fi
-	@source venv/bin/activate && \
+	@. venv/bin/activate && \
 		pip install --quiet --upgrade pip setuptools wheel && \
 		pip install --quiet -r requirements.txt && \
 		python -m uvicorn app.main:app --host 0.0.0.0 --port $(PORT) --reload
