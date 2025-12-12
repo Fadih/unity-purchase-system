@@ -19,7 +19,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          ref: main
           fetch-depth: 0
 
       - name: Set up Docker Buildx
@@ -72,36 +71,30 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           
-          # Show current state
-          echo "=== Current Git State ==="
-          git status
-          echo ""
-          echo "Current branch/HEAD:"
-          git branch -a || git rev-parse --abbrev-ref HEAD || echo "Detached HEAD"
-          echo ""
-          
-          # Fetch all branches
+          # Fetch all branches and tags
           echo "Fetching from origin..."
           git fetch origin
+          git fetch --tags
           
-          # Checkout main branch to avoid detached HEAD state
+          # Force checkout main branch and set upstream
           echo "Checking out main branch..."
-          git checkout -f main || git checkout -B main origin/main
+          git checkout -B main origin/main
+          git branch --set-upstream-to=origin/main main
           
-          # Verify we're on main branch
-          echo "=== After Checkout ==="
-          git status
+          # Verify we're on a branch (not detached HEAD)
+          echo "=== Verifying branch status ==="
+          if ! git symbolic-ref HEAD > /dev/null 2>&1; then
+            echo "❌ Still in detached HEAD state, forcing branch creation..."
+            git checkout -B main origin/main
+            git branch --set-upstream-to=origin/main main
+          fi
+          
           CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
           echo "Current branch: $CURRENT_BRANCH"
           
           if [ "$CURRENT_BRANCH" != "main" ]; then
-            echo "⚠️  Not on main branch, attempting to checkout again..."
-            git checkout -B main origin/main
-            CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-            if [ "$CURRENT_BRANCH" != "main" ]; then
-              echo "❌ Failed to checkout main branch"
-              exit 1
-            fi
+            echo "❌ Failed to checkout main branch. Current: $CURRENT_BRANCH"
+            exit 1
           fi
           
           # Update kustomization files
@@ -118,9 +111,16 @@ jobs:
             echo "Committing changes..."
             git commit -m "chore: update image tags to ${{ steps.extract_version.outputs.version }} [skip ci]"
             
-            echo "Pushing to origin/main..."
-            git push origin main
-            echo "✅ Kustomization changes committed and pushed"
+            # Verify we're still on a branch before pushing
+            if git symbolic-ref HEAD > /dev/null 2>&1; then
+              echo "Pushing to origin/main..."
+              git push origin main
+              echo "✅ Kustomization changes committed and pushed"
+            else
+              echo "⚠️  In detached HEAD, using alternative push method..."
+              git push origin HEAD:main
+              echo "✅ Kustomization changes committed and pushed"
+            fi
           fi
 
       - name: Release Summary
