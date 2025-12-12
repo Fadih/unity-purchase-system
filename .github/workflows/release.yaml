@@ -1,0 +1,94 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+env:
+  DOCKER_IMAGE_NAME: fadihussien/unity
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Extract version from release tag
+        id: extract_version
+        run: |
+          # Remove 'v' prefix if present (e.g., v1.0.5 -> 1.0.5)
+          VERSION=${GITHUB_REF#refs/tags/v}
+          VERSION=${VERSION#refs/tags/}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Extracted version: $VERSION"
+
+      - name: Release Frontend
+        working-directory: ./customer-web-server
+        run: |
+          echo "🚀 Releasing Frontend with tag: frontend-${{ steps.extract_version.outputs.version }}"
+          make docker-release IMAGE_NAME=${{ env.DOCKER_IMAGE_NAME }} IMAGE_TAG=frontend-${{ steps.extract_version.outputs.version }}
+          echo "✅ Frontend released successfully"
+
+      - name: Release Backend
+        working-directory: ./customer-management-api
+        run: |
+          echo "🚀 Releasing Backend with tag: backend-${{ steps.extract_version.outputs.version }}"
+          make docker-release IMAGE_NAME=${{ env.DOCKER_IMAGE_NAME }} IMAGE_TAG=backend-${{ steps.extract_version.outputs.version }}
+          echo "✅ Backend released successfully"
+
+      - name: Update Frontend Kustomization
+        run: |
+          echo "📝 Updating frontend kustomization.yaml..."
+          sed -i "s|newName:.*|newName: ${{ env.DOCKER_IMAGE_NAME }}|g; s|newTag:.*|newTag: frontend-${{ steps.extract_version.outputs.version }}|g" k8s/app/frontend/kustomization.yaml
+          echo "✅ Updated frontend kustomization.yaml with tag: frontend-${{ steps.extract_version.outputs.version }}"
+
+      - name: Update Backend Kustomization
+        run: |
+          echo "📝 Updating backend kustomization.yaml..."
+          sed -i "s|newName:.*|newName: ${{ env.DOCKER_IMAGE_NAME }}|g; s|newTag:.*|newTag: backend-${{ steps.extract_version.outputs.version }}|g" k8s/app/backend/kustomization.yaml
+          echo "✅ Updated backend kustomization.yaml with tag: backend-${{ steps.extract_version.outputs.version }}"
+
+      - name: Commit and push kustomization changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add k8s/app/frontend/kustomization.yaml k8s/app/backend/kustomization.yaml
+          if git diff --staged --quiet; then
+            echo "⚠️  No changes to commit"
+          else
+            git commit -m "chore: update image tags to ${{ steps.extract_version.outputs.version }} [skip ci]"
+            git push
+            echo "✅ Kustomization changes committed and pushed"
+          fi
+
+      - name: Release Summary
+        run: |
+          echo "## 🎉 Release Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ steps.extract_version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Released Images:" >> $GITHUB_STEP_SUMMARY
+          echo "- Frontend: \`${{ env.DOCKER_IMAGE_NAME }}:frontend-${{ steps.extract_version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Backend: \`${{ env.DOCKER_IMAGE_NAME }}:backend-${{ steps.extract_version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Updated Files:" >> $GITHUB_STEP_SUMMARY
+          echo "- \`k8s/app/frontend/kustomization.yaml\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`k8s/app/backend/kustomization.yaml\`" >> $GITHUB_STEP_SUMMARY
+
