@@ -1,0 +1,112 @@
+name: Generate Documentation
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build-docs:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install mkdocs and plugins
+        run: |
+          pip install mkdocs mkdocs-material mkdocs-mermaid2-plugin
+      
+      - name: Verify mkdocs.yml exists
+        run: |
+          if [ ! -f mkdocs.yml ]; then
+            echo "❌ mkdocs.yml not found. Please create it in the repository root."
+            exit 1
+          fi
+          echo "✅ Found mkdocs.yml"
+      
+      - name: Create docs directory structure
+        run: |
+          mkdir -p docs
+          # Copy root README as index
+          if [ -f README.md ]; then
+            cp README.md docs/index.md
+          else
+            echo "# Unity Purchase System" > docs/index.md
+          fi
+          
+          # Copy application READMEs
+          mkdir -p docs/customer-web-server
+          if [ -f customer-web-server/README.md ]; then
+            cp customer-web-server/README.md docs/customer-web-server/README.md
+          else
+            echo "# Customer Web Server" > docs/customer-web-server/README.md
+          fi
+          
+          mkdir -p docs/customer-management-api
+          if [ -f customer-management-api/README.md ]; then
+            cp customer-management-api/README.md docs/customer-management-api/README.md
+          else
+            echo "# Customer Management API" > docs/customer-management-api/README.md
+          fi
+          
+          # Copy infrastructure READMEs
+          mkdir -p docs/k8s/infrastructure
+          if [ -f k8s/infrastructure/README.md ]; then
+            cp k8s/infrastructure/README.md docs/k8s/infrastructure/README.md
+          else
+            echo "# Infrastructure" > docs/k8s/infrastructure/README.md
+          fi
+          
+          mkdir -p docs/k8s/argocd
+          if [ -f k8s/argocd/README.md ]; then
+            cp k8s/argocd/README.md docs/k8s/argocd/README.md
+          else
+            echo "# ArgoCD" > docs/k8s/argocd/README.md
+          fi
+          
+          mkdir -p docs/k8s/app
+          if [ -f k8s/app/README.md ]; then
+            cp k8s/app/README.md docs/k8s/app/README.md
+          else
+            echo "# Kubernetes Manifests" > docs/k8s/app/README.md
+          fi
+          
+          echo "✅ Documentation structure created"
+      
+      - name: Build documentation
+        run: |
+          mkdocs build --strict
+      
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+      
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./site
+      
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+      
+      - name: Create release notes
+        run: |
+          echo "## 📚 Documentation Generated" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Documentation has been generated and published to GitHub Pages." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Documentation URL**: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Release Version**: ${{ github.event.release.tag_name }}" >> $GITHUB_STEP_SUMMARY
+
