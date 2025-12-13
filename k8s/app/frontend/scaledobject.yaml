@@ -13,18 +13,20 @@ spec:
   cooldownPeriod: 30  # seconds to wait before scaling down
   pollingInterval: 30  # seconds between metric evaluations
   triggers:
-  # Prometheus scaler for HTTP request rate
-  - type: prometheus
-    metadata:
-      serverAddress: http://prometheus-service.prometheus.svc.cluster.local:9090
-      metricName: http_requests_per_second
-      threshold: '100'  # Scale up when requests/second > 100
-      query: |
-        sum(rate(http_requests_total{service="frontend-app"}[1m]))
-  
-  # CPU-based scaling
+  # CPU-based scaling (primary)
   - type: cpu
     metricType: Utilization
     metadata:
       value: "70"
+  
+  # Prometheus scaler for HTTP request rate (excluding health checks and metrics)
+  # Only scales if actual user traffic exceeds threshold
+  - type: prometheus
+    metadata:
+      serverAddress: http://prometheus-service.prometheus.svc.cluster.local:9090
+      metricName: http_requests_per_second
+      threshold: '20'  # Scale up when total requests/second (excluding health/metrics) > 20
+      query: |
+        sum(rate(http_requests_total{service="frontend-app",handler!="/health",handler!="/metrics"}[1m]))
+  
 
