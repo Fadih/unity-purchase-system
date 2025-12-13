@@ -1,0 +1,45 @@
+site_name: Unity Purchase System
+site_description: Documentation for Unity Purchase System
+site_author: Unity Purchase System Team
+
+repo_url: https://github.com/Fadih/unity-purchase-system
+repo_name: unity-purchase-system
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: dark
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.annotate
+
+plugins:
+  - search
+  - mermaid2
+
+nav:
+  - Home: index.md
+  - Applications:
+    - Frontend: customer-web-server/README.md
+    - Backend: customer-management-api/README.md
+  - Infrastructure:
+    - Overview: k8s/infrastructure/README.md
+    - ArgoCD: k8s/argocd/README.md
+    - Kubernetes Manifests: k8s/app/README.md
+
