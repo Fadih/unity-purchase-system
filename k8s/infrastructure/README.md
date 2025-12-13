@@ -729,9 +729,36 @@ kubectl run prometheus-test --rm -it --image=curlimages/curl --restart=Never -n 
 
 **Namespace**: `argocd`
 
-**Installation**: Installed from official ArgoCD manifests
+**Installation**: Installed from official ArgoCD manifests, then patched to use NodePort
+
+**Configuration**:
+- Service type: `NodePort` (configured via `argocd-service-patch.yaml`)
+- NodePort: `32221` (for both HTTP and HTTPS)
+- Service: `argocd-server.argocd.svc.cluster.local`
+
+**Key Files**:
+- `argocd-service-patch.yaml`: Service patch to configure NodePort access
 
 **Access ArgoCD**:
+
+**Via NodePort** (recommended):
+```bash
+# Get node IP
+NODE_IP=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}')
+
+# Get admin password
+ARGOCD_PASSWORD=$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d)
+
+echo "ArgoCD UI: https://${NODE_IP}:32221"
+echo "Username: admin"
+echo "Password: ${ARGOCD_PASSWORD}"
+# Note: Accept the self-signed certificate when accessing
+
+# Login via CLI
+argocd login ${NODE_IP}:8080 --username admin --password ${ARGOCD_PASSWORD} --insecure
+```
+
+**Via Port Forward** (alternative):
 ```bash
 # Port forward to access ArgoCD UI
 kubectl port-forward svc/argocd-server -n argocd 8080:80

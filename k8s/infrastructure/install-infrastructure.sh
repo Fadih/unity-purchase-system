@@ -103,6 +103,17 @@ kubectl wait --for=condition=ready pod \
   --namespace=argocd || echo "⚠️  Argo CD pods may still be starting..."
 echo ""
 
+# Patch Argo CD server service to use NodePort
+echo "🔧 Configuring Argo CD server service as NodePort on port 8080..."
+ARGOCD_SERVICE_PATCH="${SCRIPT_DIR}/argocd-service-patch.yaml"
+if [ -f "${ARGOCD_SERVICE_PATCH}" ]; then
+  kubectl apply -f "${ARGOCD_SERVICE_PATCH}"
+  echo "✅ Argo CD service configured as NodePort"
+else
+  echo "⚠️  Argo CD service patch file not found, skipping NodePort configuration"
+fi
+echo ""
+
 # Get Argo CD admin password
 echo "🔐 Argo CD Admin Credentials:"
 echo "   Username: admin"
@@ -151,7 +162,6 @@ echo "  - Prometheus (namespace: prometheus)"
 echo "  - Argo CD (namespace: argocd)"
 echo ""
 echo "📚 Next steps:"
-echo "  1. Use port-forward to access Argo CD UI: kubectl port-forward svc/argocd-server -n argocd 8080:80"
-echo "  2. Visit https://localhost:8080 (accept the self-signed certificate)"
+echo "  2. Visit http://localhost:32221/ (accept the self-signed certificate)"
 echo "  3. Login with username 'admin' and the password shown above"
 
