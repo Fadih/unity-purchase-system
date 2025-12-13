@@ -221,6 +221,139 @@ kubectl -n kafka exec -it kafka-0 -- /opt/kafka/bin/kafka-configs.sh \
   --describe
 ```
 
+**Viewing Topics and Topic Data**:
+
+```bash
+# List all topics with details
+kubectl -n kafka exec -it kafka-0 -- /opt/kafka/bin/kafka-topics.sh \
+  --list \
+  --bootstrap-server localhost:9092
+
+# Show detailed information about a topic (partitions, replicas, leaders)
+kubectl -n kafka exec -it kafka-0 -- /opt/kafka/bin/kafka-topics.sh \
+  --describe \
+  --topic purchase-events \
+  --bootstrap-server localhost:9092
+
+# View messages in a topic (from beginning, formatted)
+kubectl -n kafka exec -it kafka-0 -- /opt/kafka/bin/kafka-console-consumer.sh \
+  --topic purchase-events \
+  --bootstrap-server localhost:9092 \
+  --from-beginning \
+  --property print.key=true \
+  --property print.value=true \
+  --property print.timestamp=true
+
+# View messages in a topic (latest messages only)
+kubectl -n kafka exec -it kafka-0 -- /opt/kafka/bin/kafka-console-consumer.sh \
+  --topic purchase-events \
+  --bootstrap-server localhost:9092 \
+  --property print.key=true \
+  --property print.value=true
+
+# View messages from a specific partition
+kubectl -n kafka exec -it kafka-0 -- /opt/kafka/bin/kafka-console-consumer.sh \
+  --topic purchase-events \
+  --bootstrap-server localhost:9092 \
+  --partition 0 \
+  --from-beginning
+
+# View last N messages from a topic (using offset)
+kubectl -n kafka exec -it kafka-0 -- /opt/kafka/bin/kafka-console-consumer.sh \
+  --topic purchase-events \
+  --bootstrap-server localhost:9092 \
+  --offset latest \
+  --max-messages 10
+
+# View messages with timestamps (human-readable)
+kubectl -n kafka exec -it kafka-0 -- /opt/kafka/bin/kafka-console-consumer.sh \
+  --topic purchase-events \
+  --bootstrap-server localhost:9092 \
+  --from-beginning \
+  --property print.timestamp=true \
+  --property print.key=true \
+  --property print.value=true \
+  --property print.partition=true
+
+# View messages as JSON (pretty print if messages are JSON)
+kubectl -n kafka exec -it kafka-0 -- /opt/kafka/bin/kafka-console-consumer.sh \
+  --topic purchase-events \
+  --bootstrap-server localhost:9092 \
+  --from-beginning \
+  --property print.value=true | jq .
+
+# Count messages in a topic (approximate - shows offsets per partition)
+kubectl -n kafka exec -it kafka-0 -- /opt/kafka/bin/kafka-run-class.sh \
+  kafka.tools.GetOffsetShell \
+  --broker-list localhost:9092 \
+  --topic purchase-events \
+  --time -1
+
+# Get earliest and latest offsets for a topic
+kubectl -n kafka exec -it kafka-0 -- /opt/kafka/bin/kafka-run-class.sh \
+  kafka.tools.GetOffsetShell \
+  --broker-list localhost:9092 \
+  --topic purchase-events \
+  --time -2
+
+# View messages from a specific offset
+kubectl -n kafka exec -it kafka-0 -- /opt/kafka/bin/kafka-console-consumer.sh \
+  --topic purchase-events \
+  --bootstrap-server localhost:9092 \
+  --partition 0 \
+  --offset 100 \
+  --max-messages 5
+
+# View messages with key-value separator
+kubectl -n kafka exec -it kafka-0 -- /opt/kafka/bin/kafka-console-consumer.sh \
+  --topic purchase-events \
+  --bootstrap-server localhost:9092 \
+  --from-beginning \
+  --property print.key=true \
+  --property print.value=true \
+  --property key.separator=" -> " \
+  --property print.timestamp=true
+
+# View messages and save to file
+kubectl -n kafka exec -it kafka-0 -- /opt/kafka/bin/kafka-console-consumer.sh \
+  --topic purchase-events \
+  --bootstrap-server localhost:9092 \
+  --from-beginning \
+  --max-messages 100 > /tmp/kafka-messages.txt
+
+# View topic data with consumer group (won't affect other consumers)
+kubectl -n kafka exec -it kafka-0 -- /opt/kafka/bin/kafka-console-consumer.sh \
+  --topic purchase-events \
+  --bootstrap-server localhost:9092 \
+  --group kafka-viewer \
+  --from-beginning \
+  --property print.timestamp=true \
+  --property print.key=true \
+  --property print.value=true
+```
+
+**Quick Topic Data Viewing**:
+
+```bash
+# Quick view: Show last 10 messages from purchase-events topic
+kubectl -n kafka exec -it kafka-0 -- /opt/kafka/bin/kafka-console-consumer.sh \
+  --topic purchase-events \
+  --bootstrap-server localhost:9092 \
+  --offset latest \
+  --max-messages 10 \
+  --property print.timestamp=true \
+  --property print.value=true
+
+# Quick view: Show all messages from beginning (one-time)
+kubectl -n kafka exec -it kafka-0 -- /opt/kafka/bin/kafka-console-consumer.sh \
+  --topic purchase-events \
+  --bootstrap-server localhost:9092 \
+  --from-beginning \
+  --max-messages 50 \
+  --property print.timestamp=true \
+  --property print.value=true | head -20
+```
+
 **Using Kafka from External Pod** (if Kafka service is accessible):
 
 ```bash
@@ -290,11 +423,130 @@ kubectl get storageclass
 # Port forward to access MongoDB locally
 kubectl port-forward svc/mongo -n mongo 27017:27017
 
-# Connect using MongoDB client
-mongosh mongodb://localhost:27017
+# Connect using MongoDB client with authentication
+mongosh "mongodb://root:changeme@localhost:27017/purchases?authSource=admin"
 
-# Or from within cluster
-kubectl -n mongo exec -it mongo-0 -- mongosh
+# Or from within cluster (with authentication)
+kubectl -n mongo exec -it mongo-0 -- mongosh "mongodb://root:changeme@localhost:27017/purchases?authSource=admin"
+```
+
+**Common MongoDB Commands**:
+
+**Note**: MongoDB requires authentication. Default credentials: `root` / `changeme`
+
+```bash
+# Connect to MongoDB shell with authentication
+kubectl -n mongo exec -it mongo-0 -- mongosh -u root -p changeme --authenticationDatabase admin
+
+# Or connect directly to purchases database
+kubectl -n mongo exec -it mongo-0 -- mongosh "mongodb://root:changeme@localhost:27017/purchases?authSource=admin"
+```
+
+**Database Operations**:
+
+```bash
+# List all databases
+kubectl -n mongo exec -it mongo-0 -- mongosh -u root -p changeme --authenticationDatabase admin --eval "show dbs"
+
+# Switch to purchases database
+kubectl -n mongo exec -it mongo-0 -- mongosh -u root -p changeme --authenticationDatabase admin --eval "use purchases"
+
+# Show collections in current database
+kubectl -n mongo exec -it mongo-0 -- mongosh "mongodb://root:changeme@localhost:27017/purchases?authSource=admin" --eval "show collections"
+```
+
+**Viewing Purchase Data**:
+
+```bash
+# Count total purchases
+kubectl -n mongo exec -it mongo-0 -- mongosh "mongodb://root:changeme@localhost:27017/purchases?authSource=admin" --eval "db.purchases.countDocuments()"
+
+# View all purchases (first 10)
+kubectl -n mongo exec -it mongo-0 -- mongosh "mongodb://root:changeme@localhost:27017/purchases?authSource=admin" --eval "db.purchases.find().limit(10).pretty()"
+
+# View all purchases for a specific user
+kubectl -n mongo exec -it mongo-0 -- mongosh "mongodb://root:changeme@localhost:27017/purchases?authSource=admin" --eval "db.purchases.find({userId: 'user123'}).pretty()"
+
+# View purchases sorted by creation date (newest first)
+kubectl -n mongo exec -it mongo-0 -- mongosh "mongodb://root:changeme@localhost:27017/purchases?authSource=admin" --eval "db.purchases.find().sort({createdAt: -1}).limit(10).pretty()"
+
+# View purchases with specific fields only
+kubectl -n mongo exec -it mongo-0 -- mongosh "mongodb://root:changeme@localhost:27017/purchases?authSource=admin" --eval "db.purchases.find({}, {userId: 1, username: 1, price: 1, createdAt: 1}).limit(10).pretty()"
+
+# Count purchases by user
+kubectl -n mongo exec -it mongo-0 -- mongosh "mongodb://root:changeme@localhost:27017/purchases?authSource=admin" --eval "db.purchases.aggregate([{$group: {_id: '$userId', count: {$sum: 1}}}, {$sort: {count: -1}}]).pretty()"
+
+# Find purchases above a certain price
+kubectl -n mongo exec -it mongo-0 -- mongosh "mongodb://root:changeme@localhost:27017/purchases?authSource=admin" --eval "db.purchases.find({price: {$gt: 100}}).pretty()"
+
+# View purchase statistics
+kubectl -n mongo exec -it mongo-0 -- mongosh "mongodb://root:changeme@localhost:27017/purchases?authSource=admin" --eval "db.purchases.aggregate([{$group: {_id: null, total: {$sum: '$price'}, count: {$sum: 1}, avg: {$avg: '$price'}, min: {$min: '$price'}, max: {$max: '$price'}}}]).pretty()"
+```
+
+**Deleting Data**:
+
+```bash
+# Delete all purchases (⚠️ WARNING: This deletes all data)
+kubectl -n mongo exec -it mongo-0 -- mongosh "mongodb://root:changeme@localhost:27017/purchases?authSource=admin" --eval "db.purchases.deleteMany({})"
+
+# Delete purchases for a specific user
+kubectl -n mongo exec -it mongo-0 -- mongosh "mongodb://root:changeme@localhost:27017/purchases?authSource=admin" --eval "db.purchases.deleteMany({userId: 'user123'})"
+
+# Delete purchases older than a specific date
+kubectl -n mongo exec -it mongo-0 -- mongosh "mongodb://root:changeme@localhost:27017/purchases?authSource=admin" --eval "db.purchases.deleteMany({createdAt: {$lt: '2024-01-01T00:00:00Z'}})"
+
+# Delete a single purchase by ID
+kubectl -n mongo exec -it mongo-0 -- mongosh "mongodb://root:changeme@localhost:27017/purchases?authSource=admin" --eval "db.purchases.deleteOne({_id: ObjectId('YOUR_ID_HERE')})"
+```
+
+**Useful MongoDB Operations**:
+
+```bash
+# Create an index on userId for faster queries
+kubectl -n mongo exec -it mongo-0 -- mongosh "mongodb://root:changeme@localhost:27017/purchases?authSource=admin" --eval "db.purchases.createIndex({userId: 1})"
+
+# List all indexes
+kubectl -n mongo exec -it mongo-0 -- mongosh "mongodb://root:changeme@localhost:27017/purchases?authSource=admin" --eval "db.purchases.getIndexes()"
+
+# Drop the purchases collection (⚠️ WARNING: Deletes collection and all data)
+kubectl -n mongo exec -it mongo-0 -- mongosh "mongodb://root:changeme@localhost:27017/purchases?authSource=admin" --eval "db.purchases.drop()"
+
+# Drop the entire purchases database (⚠️ WARNING: Deletes database and all data)
+kubectl -n mongo exec -it mongo-0 -- mongosh -u root -p changeme --authenticationDatabase admin --eval "use purchases; db.dropDatabase()"
+
+# Export purchases to backup file (requires authentication)
+kubectl -n mongo exec -it mongo-0 -- mongodump --uri="mongodb://root:changeme@localhost:27017/purchases?authSource=admin" --out=/tmp/backup
+
+# Import data from backup file (requires authentication)
+kubectl -n mongo exec -it mongo-0 -- mongorestore --uri="mongodb://root:changeme@localhost:27017/purchases?authSource=admin" /tmp/backup/purchases/purchases.bson
+
+# Get database stats
+kubectl -n mongo exec -it mongo-0 -- mongosh "mongodb://root:changeme@localhost:27017/purchases?authSource=admin" --eval "db.stats()"
+
+# Get collection stats
+kubectl -n mongo exec -it mongo-0 -- mongosh "mongodb://root:changeme@localhost:27017/purchases?authSource=admin" --eval "db.purchases.stats()"
+
+# Check MongoDB server status
+kubectl -n mongo exec -it mongo-0 -- mongosh -u root -p changeme --authenticationDatabase admin --eval "db.serverStatus()"
+
+# View current operations
+kubectl -n mongo exec -it mongo-0 -- mongosh -u root -p changeme --authenticationDatabase admin --eval "db.currentOp()"
+```
+
+**Interactive MongoDB Shell**:
+
+```bash
+# Open interactive MongoDB shell with authentication
+kubectl -n mongo exec -it mongo-0 -- mongosh "mongodb://root:changeme@localhost:27017/purchases?authSource=admin"
+
+# Or connect and then switch to purchases database
+kubectl -n mongo exec -it mongo-0 -- mongosh -u root -p changeme --authenticationDatabase admin
+# Then in the shell:
+# > use purchases
+# > db.purchases.find().limit(5)
+# > db.purchases.countDocuments()
+# > db.purchases.findOne({userId: "user123"})
+# > exit
 ```
 
 **Troubleshooting**:
