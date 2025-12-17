@@ -4,7 +4,7 @@
 IMAGE_NAME ?= fadihussien/unity
 IMAGE_TAG ?= frontend-v1.0.4
 FULL_IMAGE_NAME = $(IMAGE_NAME):$(IMAGE_TAG)
-PORT ?= 8001
+PORT ?= 32222
 NAMESPACE ?= app
 
 # Colors for output

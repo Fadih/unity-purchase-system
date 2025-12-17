@@ -29,4 +29,14 @@ spec:
       query: |
         sum(rate(http_requests_total{service="frontend-app",handler!="/health",handler!="/metrics"}[1m]))
   
+  # Prometheus scaler for Kafka publish attempt rate
+  # Scales based on rate of Kafka publish attempts (both success and failure)
+  - type: prometheus
+    metadata:
+      serverAddress: http://prometheus-service.prometheus.svc.cluster.local:9090
+      metricName: kafka_publish_attempts_per_second
+      threshold: '15'  # Scale up when Kafka publish attempts/second > 15
+      query: |
+        sum(rate(kafka_publish_attempts_total[1m]))
+  
 
