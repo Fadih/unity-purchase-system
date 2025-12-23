@@ -64,7 +64,7 @@ Before applying, update the repository URL in the application manifests:
 ```yaml
 spec:
   source:
-    repoURL: https://github.com/YOUR-USERNAME/unity-purchase-system.git  # Update this
+    repoURL: https://github.com/YOUR-USERNAME/gitops-purchase-system.git  # Update this
     targetRevision: main  # Update branch if needed
 ```
 
@@ -100,7 +100,7 @@ Each application manifest (`frontend-application.yaml` and `backend-application.
 **Source Configuration**:
 ```yaml
 source:
-  repoURL: https://github.com/Fadih/unity-purchase-system.git  # Git repository URL
+  repoURL: https://github.com/Fadih/gitops-purchase-system.git  # Git repository URL
   targetRevision: main  # Branch or tag to track
   path: k8s/app/frontend  # Path to Kubernetes manifests in repository
   directory:
@@ -378,13 +378,13 @@ kubectl logs -n argocd deployment/argocd-repo-server --tail=50
 ```bash
 # Check repository connectivity
 kubectl exec -n argocd deployment/argocd-repo-server -- \
-  git ls-remote https://github.com/YOUR-USERNAME/unity-purchase-system.git
+  git ls-remote https://github.com/YOUR-USERNAME/gitops-purchase-system.git
 
 # Verify repository URL in application
 kubectl get application frontend -n argocd -o yaml | grep repoURL
 
 # For private repositories, add repository credentials
-argocd repo add https://github.com/YOUR-USERNAME/unity-purchase-system.git \
+argocd repo add https://github.com/YOUR-USERNAME/gitops-purchase-system.git \
   --username YOUR_USERNAME \
   --password YOUR_TOKEN
 ```
@@ -392,11 +392,11 @@ argocd repo add https://github.com/YOUR-USERNAME/unity-purchase-system.git \
 **For Private Repositories**:
 ```bash
 # Add SSH key for private repository
-argocd repo add git@github.com:YOUR-USERNAME/unity-purchase-system.git \
+argocd repo add git@github.com:YOUR-USERNAME/gitops-purchase-system.git \
   --ssh-private-key-path ~/.ssh/id_rsa
 
 # Or add HTTPS with token
-argocd repo add https://github.com/YOUR-USERNAME/unity-purchase-system.git \
+argocd repo add https://github.com/YOUR-USERNAME/gitops-purchase-system.git \
   --type git \
   --name unity-purchase-system \
   --username YOUR_USERNAME \
@@ -489,7 +489,7 @@ metadata:
   namespace: argocd
 spec:
   source:
-    repoURL: https://github.com/YOUR-USERNAME/unity-purchase-system.git
+    repoURL: https://github.com/YOUR-USERNAME/gitops-purchase-system.git
     targetRevision: main
     path: k8s/app/frontend
   destination:
@@ -543,7 +543,7 @@ spec:
     spec:
       project: default
       source:
-        repoURL: https://github.com/YOUR-USERNAME/unity-purchase-system.git
+        repoURL: https://github.com/YOUR-USERNAME/gitops-purchase-system.git
         targetRevision: main
         path: '{{path}}'
       destination:
@@ -581,4 +581,5 @@ syncPolicy:
 - [ArgoCD Best Practices](https://argo-cd.readthedocs.io/en/stable/user-guide/best_practices/)
 - [Application Set](https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/)
 - [Sync Policies](https://argo-cd.readthedocs.io/en/stable/user-guide/sync_policies/)
+
 

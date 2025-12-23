@@ -42,7 +42,7 @@ jobs:
           if [ -f README.md ]; then
             cp README.md docs/index.md
           else
-            echo "# Unity Purchase System" > docs/index.md
+            echo "# gitops Purchase System" > docs/index.md
           fi
           
           # Copy application READMEs

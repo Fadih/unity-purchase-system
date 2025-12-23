@@ -1,9 +1,9 @@
-site_name: Unity Purchase System
-site_description: Documentation for Unity Purchase System
-site_author: Unity Purchase System Team
+site_name: gitops Purchase System
+site_description: Documentation for gitops Purchase System
+site_author: gitops Purchase System Team
 
-repo_url: https://github.com/Fadih/unity-purchase-system
-repo_name: unity-purchase-system
+repo_url: https://github.com/Fadih/gitops-purchase-system
+repo_name: gitops-purchase-system
 
 theme:
   name: material

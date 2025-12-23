@@ -8,7 +8,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/Fadih/unity-purchase-system.git  # TODO: Update with your repository URL
+    repoURL: https://github.com/Fadih/gitops-purchase-system.git  # TODO: Update with your repository URL
     targetRevision: main  # TODO: Update with your branch name
     path: k8s/app/frontend
     directory:
