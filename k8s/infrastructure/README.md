@@ -1,6 +1,6 @@
 # Kubernetes Infrastructure Documentation
 
-This directory contains the infrastructure components required for the Unity Purchase System, including Kafka, MongoDB, KEDA, Prometheus, and ArgoCD.
+This directory contains the infrastructure components required for the gitops Purchase System, including Kafka, MongoDB, KEDA, Prometheus, and ArgoCD.
 
 ## Table of Contents
 

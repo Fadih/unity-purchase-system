@@ -398,7 +398,7 @@ argocd repo add git@github.com:YOUR-USERNAME/gitops-purchase-system.git \
 # Or add HTTPS with token
 argocd repo add https://github.com/YOUR-USERNAME/gitops-purchase-system.git \
   --type git \
-  --name unity-purchase-system \
+  --name gitops-purchase-system \
   --username YOUR_USERNAME \
   --password YOUR_GITHUB_TOKEN
 ```
